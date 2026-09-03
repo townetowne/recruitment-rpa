@@ -75,6 +75,8 @@ test('blank-machine onboarding documents and scripts the career-ops companion in
   assert.equal(pkg.scripts?.['setup:career-ops'], 'node scripts/setup-career-ops.mjs');
   assert.equal(existsSync(join(projectRoot, 'scripts', 'setup-career-ops.mjs')), true);
   assert.match(quickstart, /从一台空白机器跑通/);
+  assert.match(quickstart, /codeload\.github\.com\/townetowne\/recruitment-rpa\/zip\/refs\/heads\/main/);
+  assert.match(quickstart, /Git clone 是可选方式/);
   assert.match(quickstart, /npm run setup:career-ops/);
   assert.match(quickstart, /Chrome 插件/);
   assert.match(quickstart, /Node\.js/);
