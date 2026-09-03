@@ -14,14 +14,22 @@
 
 先安装 Chrome 浏览器。
 
-然后下载本项目。会用 Git 的用户执行：
+然后下载本项目。推荐直接下载 ZIP：
+
+```text
+https://codeload.github.com/townetowne/recruitment-rpa/zip/refs/heads/main
+```
+
+下载后解压，进入 `recruitment-rpa-main` 文件夹。如果你想把文件夹名称改短，可以改成 `recruitment-rpa`。
+
+Git clone 是可选方式。会用 Git 且网络稳定的用户也可以执行：
 
 ```bash
 git clone https://github.com/townetowne/recruitment-rpa.git
 cd recruitment-rpa
 ```
 
-没有安装 Git 的用户也可以在 GitHub 页面点击 `Code` → `Download ZIP`，解压后进入 `recruitment-rpa` 文件夹。
+没有安装 Git 的用户也可以在 GitHub 页面点击 `Code` → `Download ZIP`，效果和上面的直接 ZIP 链接一致。
 
 ## 1. 安装 Chrome 插件
 
