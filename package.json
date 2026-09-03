@@ -1,0 +1,17 @@
+{
+  "name": "@genesis-nexus/recruitment-rpa",
+  "version": "0.1.16",
+  "private": false,
+  "type": "module",
+  "description": "Boss-first recruitment RPA execution layer with reusable site adapters and no visual automation path.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/townetowne/recruitment-rpa.git"
+  },
+  "scripts": {
+    "setup:career-ops": "node scripts/setup-career-ops.mjs",
+    "boss:collect-score": "node scripts/boss-collect-score.mjs",
+    "test": "node --test tests/*.test.mjs"
+  }
+}
