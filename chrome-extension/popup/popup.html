@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Genesis Recruitment RPA</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Genesis RPA</h1>
+        <span id="status">Ready</span>
+      </header>
+      <section class="target" aria-label="Boss target tab">
+        <div class="target-heading">
+          <strong>Boss Tab</strong>
+          <button type="button" data-role="refresh-tabs">Refresh</button>
+        </div>
+        <div id="target-tabs" class="target-tabs"></div>
+      </section>
+      <section class="runner" aria-label="Local runner">
+        <div class="target-heading">
+          <strong>Runner</strong>
+          <span class="runner-mode">Auto</span>
+        </div>
+        <input id="runner-url" value="http://127.0.0.1:17333" autocomplete="off">
+        <div id="runner-status" class="runner-status">Waiting for runner</div>
+      </section>
+      <section class="toolbar" aria-label="Boss canary actions">
+        <button type="button" data-action="read_route_contract">Route</button>
+        <button type="button" data-action="read_job_cards">Jobs</button>
+        <button type="button" data-action="read_job_detail">Detail</button>
+      </section>
+      <pre id="output">{}</pre>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
