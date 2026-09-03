@@ -26,9 +26,15 @@ See [QUICKSTART.zh-CN.md](QUICKSTART.zh-CN.md) for the full beginner flow.
 
 The short version is:
 
+```text
+Download ZIP:
+https://codeload.github.com/townetowne/recruitment-rpa/zip/refs/heads/main
+```
+
+Then unzip and enter the project directory:
+
 ```bash
-git clone https://github.com/townetowne/recruitment-rpa.git
-cd recruitment-rpa
+cd recruitment-rpa-main
 npm run setup:career-ops
 ```
 
