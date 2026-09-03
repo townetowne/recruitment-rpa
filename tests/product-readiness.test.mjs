@@ -83,7 +83,10 @@ test('blank-machine onboarding documents and scripts the career-ops companion in
   assert.match(quickstart, /career-ops-cn/);
   assert.match(usage, /recruitment-rpa =/);
   assert.match(usage, /career-ops-cn =/);
-  assert.match(usage, /不建议直接上传你的本地 career-ops-cn/);
+  assert.doesNotMatch(quickstart, /是否也要上传|不建议直接上传|迁到 `townetowne\/career-ops-cn`/);
+  assert.doesNotMatch(usage, /是否也要上传|不建议直接上传|迁到 `townetowne\/career-ops-cn`/);
+  assert.match(quickstart, /`career-ops-cn lite` 已经内置在本仓库/);
+  assert.match(usage, /`career-ops-cn lite` 已经内置在本仓库/);
   assert.equal(existsSync(join(projectRoot, 'vendor', 'career-ops-cn', 'package.json')), true);
   assert.equal(existsSync(join(projectRoot, 'vendor', 'career-ops-cn', 'boss-match.mjs')), true);
   assert.equal(existsSync(join(projectRoot, 'vendor', 'career-ops-cn', 'config', 'profile.yml')), true);

@@ -158,13 +158,21 @@ $HOME/.codex/state/recruitment-rpa/
 - 不会导出 cookie
 - 不会用截图或坐标点网页
 
-## career-ops-cn 是否也要上传
+## 内置评分目录是什么
 
-结论：当前不要直接上传你的本地 `career-ops-cn`。
+`career-ops-cn lite` 已经内置在本仓库里，位置是：
 
-原因是本地 `career-ops-cn` 往往包含个人简历、画像配置、岗位结果、沟通日志、cookie 或历史运行数据。公开发布前必须清洗，只保留代码、模板、示例数据和测试。
+```text
+vendor/career-ops-cn
+```
 
-对普通用户来说，只需要 `npm run setup:career-ops` 安装内置干净版即可。后续如果要把完整 `career-ops-cn` 也迁到 `townetowne/career-ops-cn`，应该单独做一次清洗和发布。
+它不是另一个必须单独下载的项目。`npm run setup:career-ops` 只是把这份内置模板复制到相邻运行目录：
+
+```text
+../career-ops-cn
+```
+
+这个相邻目录用来保存你的 profile、候选池、评分结果和审核文件。这样做是为了让工具运行时生成的数据不混进插件源码目录。
 
 ## 常见问题
 

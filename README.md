@@ -18,7 +18,7 @@ BOSS-first recruitment automation for people who want a ranked job shortlist wit
 - It is required for `npm run boss:collect-score`.
 - `npm run setup:career-ops` copies the bundled clean `career-ops-cn` lite template into a sibling directory.
 - A full personal `career-ops-cn` can also be passed with `--career-ops-root`.
-- Do not publish your private local `career-ops-cn` data directory, resume, cookies, profile, or run outputs.
+- The bundled template lives in this repository at `vendor/career-ops-cn`; the sibling `../career-ops-cn` directory is generated locally for runtime data.
 
 ## Empty-Machine Quick Start
 

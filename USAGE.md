@@ -23,8 +23,8 @@ boss-review.mjs
 
 - 只测试插件读取页面，不需要 `career-ops-cn`。
 - 要输出匹配分数和审核清单，必须安装 `career-ops-cn`。
-- 本仓库内置一个干净版 `career-ops-cn` lite 模板，供 `npm run setup:career-ops` 复制使用。
-- 不建议直接上传你的本地 career-ops-cn，因为它通常包含个人简历、画像、岗位数据、沟通记录和运行产物。
+- `career-ops-cn lite` 已经内置在本仓库，位置是 `vendor/career-ops-cn`。
+- `npm run setup:career-ops` 会把这份内置模板复制成相邻运行目录 `../career-ops-cn`。
 
 ## 2. 从空白机器安装
 
