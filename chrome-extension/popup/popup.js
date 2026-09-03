@@ -27,7 +27,7 @@ const TASK_BUILDERS = {
   read_job_detail: () => ({
     platform: 'boss',
     action: 'read_job_detail',
-    jobKey: 'boss:manual-canary',
+    useCurrentDetailRoute: true,
   }),
 };
 

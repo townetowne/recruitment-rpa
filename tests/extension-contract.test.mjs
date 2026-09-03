@@ -30,6 +30,7 @@ test('extension source contains no visual or coordinate automation vocabulary', 
     readProjectFile('chrome-extension', 'src', 'content.js'),
     readProjectFile('chrome-extension', 'src', 'injected.js'),
     readProjectFile('chrome-extension', 'src', 'target-selection.js'),
+    readProjectFile('chrome-extension', 'src', 'boss-detail-route.js'),
   ].join('\n');
 
   assert.doesNotMatch(files, /\b(screenshot|screen_ocr|coordinate|mouse|dom_cua|visual_snapshot)\b/i);
@@ -109,6 +110,8 @@ test('extension falls back to Boss detail HTML when API contact evidence is unav
 
 test('extension background can connect to the local runner only', () => {
   const background = readProjectFile('chrome-extension', 'src', 'background.js');
+  const detailRoute = readProjectFile('chrome-extension', 'src', 'boss-detail-route.js');
+  const detailRoutingSource = `${background}\n${detailRoute}`;
 
   assert.match(background, /selectDefaultTargetTab/);
   assert.match(background, /resolveDefaultTargetTab/);
@@ -131,6 +134,9 @@ test('extension background can connect to the local runner only', () => {
   assert.match(background, /ensure_search_route/);
   assert.match(background, /ensureBossSearchRoute/);
   assert.match(background, /assertBossDetailRoute/);
+  assert.match(background, /createCurrentBossDetailRoute/);
+  assert.match(detailRoutingSource, /boss_current_detail_route_required/);
+  assert.equal(background.includes('const routeUrl = assertBossDetailRoute(task.route || { url: task.url, jobKey: task.jobKey });'), false);
   assert.match(background, /isBossDetailRouteMatch/);
   assert.match(background, /waitForTabDetailRoute/);
   assert.match(background, /ensureBossDetailRoute/);

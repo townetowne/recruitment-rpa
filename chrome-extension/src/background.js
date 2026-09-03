@@ -5,6 +5,11 @@ import {
   summarizeRecruitmentTab,
 } from './target-selection.js';
 import { unwrapContentResponse } from './extension-response.js';
+import {
+  createCurrentBossDetailRoute,
+  isBossDetailRouteMatch,
+  normalizeBossDetailRoute as assertBossDetailRoute,
+} from './boss-detail-route.js';
 
 const ALLOWED_ACTIONS = new Set([
   'read_runtime_diagnostics',
@@ -74,29 +79,6 @@ function isBossSearchRouteMatch(urlValue, route) {
       url.searchParams.get('query') === route.query &&
       url.searchParams.get('city') === route.cityCode &&
       (url.searchParams.get('page') || '1') === String(route.page || 1)
-    );
-  } catch {
-    return false;
-  }
-}
-
-function assertBossDetailRoute(route) {
-  const url = new URL(route?.url || '');
-  if (url.hostname !== 'www.zhipin.com' || !url.pathname.startsWith('/job_detail/')) {
-    throw new Error('unsupported_boss_detail_route');
-  }
-  if (route?.path && route.path !== url.pathname) {
-    throw new Error('unsupported_boss_detail_route');
-  }
-  return url;
-}
-
-function isBossDetailRouteMatch(urlValue, route) {
-  try {
-    const url = new URL(urlValue || '');
-    return (
-      url.hostname === 'www.zhipin.com' &&
-      url.pathname === route.path
     );
   } catch {
     return false;
@@ -256,20 +238,16 @@ async function ensureBossSearchRoute(task, targetTabId) {
 }
 
 async function ensureBossDetailRoute(task, targetTabId) {
-  const routeUrl = assertBossDetailRoute(task.route || { url: task.url, jobKey: task.jobKey });
-  const route = {
-    ...(task.route || {}),
-    host: routeUrl.hostname,
-    path: routeUrl.pathname,
-    url: routeUrl.toString(),
-  };
   const tab = await resolveDispatchTab(targetTabId);
   let dispatchTab = tab;
   let routeNavigated = false;
+  const route = task.route || task.url
+    ? assertBossDetailRoute(task.route || { url: task.url, jobKey: task.jobKey })
+    : createCurrentBossDetailRoute(tab, task);
 
   if (!isBossDetailRouteMatch(tab.url, route)) {
     await chrome.tabs.update(tab.id, {
-      url: routeUrl.toString(),
+      url: route.url,
       active: true,
     });
     dispatchTab = await waitForTabDetailRoute(tab.id, route, task.timeoutMs || 20000);
@@ -281,7 +259,9 @@ async function ensureBossDetailRoute(task, targetTabId) {
     type: EXECUTE_MESSAGE_TYPE,
     task: {
       ...task,
-      url: routeUrl.toString(),
+      jobKey: task.jobKey || route.jobKey,
+      url: route.url,
+      route,
     },
   });
   return {
