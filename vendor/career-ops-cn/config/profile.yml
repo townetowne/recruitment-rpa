@@ -1,0 +1,86 @@
+# Minimal public demo profile for recruitment-rpa.
+# Edit this file for serious personal ranking.
+
+profile:
+  confirmed: true
+  confirmed_at: ""
+  source: "recruitment-rpa bundled default profile"
+
+candidate:
+  name: "候选人"
+  city: "武汉"
+  current_title: "AI / 后端 / 架构候选人"
+  years_experience: "请按个人情况修改"
+  status: "求职中"
+  available_from: "可沟通"
+
+target:
+  roles:
+    - "AI 架构师"
+    - "大模型架构师"
+    - "Java 架构师"
+    - "技术负责人"
+  cities:
+    - "武汉"
+  expected_salary: "30-50K"
+  minimum_salary: "25K"
+  search_intensity: "正常"
+
+skills:
+  core:
+    - "AI"
+    - "大模型"
+    - "LLM"
+    - "Agent"
+    - "RAG"
+    - "Java"
+    - "微服务"
+    - "分布式"
+    - "数据平台"
+    - "数据治理"
+    - "Kafka"
+    - "Flink"
+    - "Kubernetes"
+    - "云原生"
+  tools: []
+  certificates: []
+
+highlights:
+  projects:
+    - "具备复杂系统架构、数据平台、AI 工程化或业务系统落地经验"
+  experience:
+    - "能从业务目标、系统设计、工程质量和交付风险综合判断岗位匹配度"
+
+preferences:
+  industry:
+    - "互联网"
+    - "AI"
+    - "企业服务"
+    - "软件服务"
+  company_stage:
+    - "成熟公司"
+    - "成长型公司"
+  work_style:
+    city_commute: "武汉"
+    overtime: "接受阶段性加班，不接受长期大小周"
+  reject:
+    - "外包"
+    - "派遣"
+    - "驻场"
+    - "纯销售"
+    - "长期出差"
+    - "无社保"
+
+weights:
+  responsibility_match: 25
+  skill_match: 25
+  salary_match: 15
+  city_commute: 10
+  company_quality: 10
+  hr_activity: 10
+  max_risk_penalty: 20
+
+boss:
+  greeting_style: "稳重专业"
+  daily_limit: 20
+  send_threshold: 4.0
