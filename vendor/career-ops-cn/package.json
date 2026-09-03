@@ -1,0 +1,16 @@
+{
+  "name": "@genesis-nexus/career-ops-cn-lite",
+  "version": "0.1.16",
+  "private": true,
+  "type": "module",
+  "description": "Minimal local scoring companion bundled with recruitment-rpa.",
+  "license": "MIT",
+  "scripts": {
+    "boss:score": "node boss-score.mjs",
+    "boss:match": "node boss-match.mjs",
+    "boss:review": "node boss-review.mjs"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.1"
+  }
+}
