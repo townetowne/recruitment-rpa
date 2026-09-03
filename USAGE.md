@@ -30,12 +30,16 @@ boss-review.mjs
 
 下载本仓库：
 
+```text
+https://codeload.github.com/townetowne/recruitment-rpa/zip/refs/heads/main
+```
+
+下载 ZIP 后解压，进入项目目录。Git clone 是可选方式：
+
 ```bash
 git clone https://github.com/townetowne/recruitment-rpa.git
 cd recruitment-rpa
 ```
-
-没有安装 Git 时，可以在 GitHub 页面点击 `Code` → `Download ZIP`，解压后进入 `recruitment-rpa` 文件夹。
 
 安装 `career-ops-cn` 评分引擎：
 
