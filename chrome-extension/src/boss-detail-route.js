@@ -47,6 +47,16 @@ export function createCurrentBossDetailRoute(tab, task = {}) {
   }
 }
 
+export function shouldReadCurrentVisibleBossDetail(task = {}) {
+  return (
+    task.platform === 'boss' &&
+    task.action === 'read_job_detail' &&
+    task.useCurrentVisibleDetail === true &&
+    !text(task.url) &&
+    !task.route
+  );
+}
+
 export function isBossDetailRouteMatch(urlValue, route) {
   try {
     const url = new URL(urlValue || '');

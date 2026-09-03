@@ -135,6 +135,8 @@ test('extension background can connect to the local runner only', () => {
   assert.match(background, /ensureBossSearchRoute/);
   assert.match(background, /assertBossDetailRoute/);
   assert.match(background, /createCurrentBossDetailRoute/);
+  assert.match(background, /shouldReadCurrentVisibleBossDetail/);
+  assert.match(detailRoutingSource, /useCurrentVisibleDetail/);
   assert.match(detailRoutingSource, /boss_current_detail_route_required/);
   assert.equal(background.includes('const routeUrl = assertBossDetailRoute(task.route || { url: task.url, jobKey: task.jobKey });'), false);
   assert.match(background, /isBossDetailRouteMatch/);

@@ -9,6 +9,7 @@ import {
   createCurrentBossDetailRoute,
   isBossDetailRouteMatch,
   normalizeBossDetailRoute as assertBossDetailRoute,
+  shouldReadCurrentVisibleBossDetail,
 } from './boss-detail-route.js';
 
 const ALLOWED_ACTIONS = new Set([
@@ -239,6 +240,20 @@ async function ensureBossSearchRoute(task, targetTabId) {
 
 async function ensureBossDetailRoute(task, targetTabId) {
   const tab = await resolveDispatchTab(targetTabId);
+
+  if (shouldReadCurrentVisibleBossDetail(task)) {
+    await ensureContentScript(tab.id);
+    const response = await chrome.tabs.sendMessage(tab.id, {
+      type: EXECUTE_MESSAGE_TYPE,
+      task,
+    });
+    return {
+      ...unwrapContentResponse(response),
+      routeNavigated: false,
+      routePath: '',
+    };
+  }
+
   let dispatchTab = tab;
   let routeNavigated = false;
   const route = task.route || task.url

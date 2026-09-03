@@ -28,7 +28,8 @@ test('popup exposes only Boss canary actions', () => {
   assert.match(html, /data-action="read_route_contract"/);
   assert.match(html, /data-action="read_job_cards"/);
   assert.match(html, /data-action="read_job_detail"/);
-  assert.match(js, /useCurrentDetailRoute:\s*true/);
+  assert.match(js, /useCurrentVisibleDetail:\s*true/);
+  assert.doesNotMatch(js, /useCurrentDetailRoute/);
   assert.doesNotMatch(js, /boss:manual-canary/);
   assert.doesNotMatch(`${html}\n${js}`, /screenshot|screen_ocr|coordinate|dom_cua|visual_snapshot|os_pointer/i);
 });
