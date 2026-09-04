@@ -60,6 +60,25 @@ export async function writeCareerOpsCandidates({
   };
 }
 
+export async function writeCareerOpsSessionCandidates({
+  careerOpsRoot,
+  candidates,
+  candidatesPath,
+}) {
+  if (!careerOpsRoot) throw new Error('career_ops_root_required');
+  if (!Array.isArray(candidates)) throw new Error('candidates_required');
+  if (!candidatesPath) throw new Error('session_candidates_path_required');
+
+  const outputPath = join(careerOpsRoot, candidatesPath);
+  await mkdir(dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, `${JSON.stringify(candidates, null, 2)}\n`, 'utf8');
+
+  return {
+    outputPath,
+    total: candidates.length,
+  };
+}
+
 export function createCareerOpsScoreCommands({
   threshold = 4,
   limit = 50,

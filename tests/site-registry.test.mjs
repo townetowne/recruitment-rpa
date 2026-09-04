@@ -3,13 +3,17 @@ import test from 'node:test';
 
 import { DEFAULT_SITE_ADAPTERS, getSiteAdapter } from '../src/site-registry.mjs';
 
-test('default registry covers Boss, Liepin, and LinkedIn as separate adapters', () => {
+test('default registry covers only the supported recruitment site adapters', () => {
   assert.deepEqual(
     DEFAULT_SITE_ADAPTERS.map((adapter) => adapter.platform),
     ['boss', 'liepin', 'linkedin'],
   );
 
   assert.equal(DEFAULT_SITE_ADAPTERS[0].priority, 'primary');
+});
+
+test('retired Maimai assistance is not available through the site registry', () => {
+  assert.throws(() => getSiteAdapter('maimai'), /site_adapter_not_found:maimai/);
 });
 
 test('Boss adapter is the primary execution target and delegates scoring to career-ops-cn', () => {

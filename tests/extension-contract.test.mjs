@@ -14,7 +14,7 @@ test('Chrome extension manifest uses Boss-only host permissions for the current 
 
   assert.equal(manifest.manifest_version, 3);
   assert.equal(manifest.name, 'Genesis Recruitment RPA');
-  assert.equal(manifest.version, '0.1.16');
+  assert.equal(manifest.version, '0.1.17');
   assert.deepEqual(manifest.permissions, ['storage', 'scripting', 'alarms']);
   assert.deepEqual(manifest.host_permissions, [
     'https://www.zhipin.com/*',
@@ -51,12 +51,14 @@ test('extension content script delegates page-context fetch through injected bri
   assert.match(content, /function waitForBossJobDetail/);
   assert.match(content, /contentVersion/);
   assert.match(content, /protocolVersion/);
-  assert.match(content, /boss-rpa-v0\.1\.16/);
+  assert.match(content, /boss-rpa-v0\.1\.17/);
   assert.match(content, /RECRUITMENT_RPA_EXECUTE/);
   assert.match(content, /RECRUITMENT_RPA_PAGE_FETCH/);
   assert.match(content, /RECRUITMENT_RPA_PAGE_EXTRACT_BOSS_JOBS/);
   assert.match(content, /read_job_cards/);
   assert.match(content, /read_job_detail/);
+  assert.match(content, /readBossChatThreads/);
+  assert.match(content, /read_chat_threads/);
   assert.match(content, /readBossJobDetailFromApi/);
   assert.match(content, /await waitForBossJobDetail/);
   assert.match(content, /\/wapi\/zpgeek\/job\/detail\.json/);
@@ -133,6 +135,9 @@ test('extension background can connect to the local runner only', () => {
   assert.match(background, /await ensureBossSearchRoute\(task, selectedTargetTabId\)/);
   assert.match(background, /ensure_search_route/);
   assert.match(background, /ensureBossSearchRoute/);
+  assert.match(background, /ensure_chat_route/);
+  assert.match(background, /ensureBossChatRoute/);
+  assert.match(background, /read_chat_threads/);
   assert.match(background, /assertBossDetailRoute/);
   assert.match(background, /createCurrentBossDetailRoute/);
   assert.match(background, /shouldReadCurrentVisibleBossDetail/);
@@ -161,11 +166,11 @@ test('extension background reinjects content script when the page has an older c
   const background = readProjectFile('chrome-extension', 'src', 'background.js');
   const content = readProjectFile('chrome-extension', 'src', 'content.js');
 
-  assert.match(background, /EXPECTED_CONTENT_VERSION = '0\.1\.16'/);
-  assert.match(background, /EXECUTE_MESSAGE_TYPE = 'RECRUITMENT_RPA_EXECUTE_V0_1_16'/);
+  assert.match(background, /EXPECTED_CONTENT_VERSION = '0\.1\.17'/);
+  assert.match(background, /EXECUTE_MESSAGE_TYPE = 'RECRUITMENT_RPA_EXECUTE_V0_1_17'/);
   assert.match(background, /__genesisRecruitmentRpaContentVersion/);
   assert.match(background, /ready && version === EXPECTED_CONTENT_VERSION/);
   assert.match(content, /__genesisRecruitmentRpaContentVersion/);
-  assert.match(content, /'0\.1\.16'/);
-  assert.match(content, /RECRUITMENT_RPA_EXECUTE_V0_1_16/);
+  assert.match(content, /'0\.1\.17'/);
+  assert.match(content, /RECRUITMENT_RPA_EXECUTE_V0_1_17/);
 });

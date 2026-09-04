@@ -1,7 +1,7 @@
 import { FORBIDDEN_OPERATION_KINDS, authorizeOperation } from '../execution-policy.mjs';
 
-export const BOSS_RPA_CONTENT_VERSION = '0.1.16';
-export const BOSS_RPA_PROTOCOL_VERSION = 'boss-rpa-v0.1.16';
+export const BOSS_RPA_CONTENT_VERSION = '0.1.17';
+export const BOSS_RPA_PROTOCOL_VERSION = 'boss-rpa-v0.1.17';
 const BOSS_CITY_CODES = Object.freeze({
   '武汉': '101200100',
 });
@@ -10,7 +10,7 @@ export const BOSS_ADAPTER = Object.freeze({
   platform: 'boss',
   priority: 'primary',
   hosts: ['www.zhipin.com'],
-  capabilities: ['jobDiscovery', 'completeJobDetail', 'reviewedMessageSend', 'attachmentResumeReplacement'],
+  capabilities: ['jobDiscovery', 'completeJobDetail', 'chatReconciliation', 'reviewedMessageSend', 'attachmentResumeReplacement'],
   contracts: {
     session: {
       source: 'dom_contract_query',
@@ -19,6 +19,10 @@ export const BOSS_ADAPTER = Object.freeze({
     jobDetail: {
       source: 'dom_contract_query',
       fields: ['title', 'company', 'description', 'baseCity', 'salary', 'hrActiveSignal', 'contactState'],
+    },
+    chatReconciliation: {
+      source: 'dom_contract_query',
+      fields: ['company', 'title', 'lastMessage', 'lastSpeaker', 'lastMessageAt', 'deliveryStatus'],
     },
     reviewGate: {
       source: 'career_ops_cn_review_artifact',
@@ -108,6 +112,14 @@ function bossSearchRoute({ query, baseCity, page = 1 }) {
   };
 }
 
+function bossChatRoute() {
+  return {
+    host: 'www.zhipin.com',
+    path: '/web/geek/chat',
+    url: 'https://www.zhipin.com/web/geek/chat',
+  };
+}
+
 function bossDetailRoute({ jobKey, url }) {
   const normalizedJobKey = assertNonEmptyString(jobKey, 'job_key_required');
   let parsed;
@@ -139,6 +151,34 @@ export function createBossSearchRouteTask({ filters, page = 1 }) {
     readOnly: true,
     route: bossSearchRoute({ query, baseCity, page }),
     operation: checkedOperation({ kind: 'dom_contract_query', platform: 'boss' }),
+  };
+}
+
+export function createBossChatRouteTask() {
+  return {
+    platform: 'boss',
+    action: 'ensure_chat_route',
+    readOnly: true,
+    route: bossChatRoute(),
+    operation: checkedOperation({ kind: 'dom_contract_query', platform: 'boss' }),
+  };
+}
+
+export function createBossChatThreadsTask({ limit = 80 } = {}) {
+  const normalizedLimit = Number(limit);
+  if (!Number.isInteger(normalizedLimit) || normalizedLimit < 1 || normalizedLimit > 200) {
+    throw new Error('boss_chat_thread_limit_out_of_range');
+  }
+
+  return {
+    platform: 'boss',
+    action: 'read_chat_threads',
+    readOnly: true,
+    limit: normalizedLimit,
+    operations: [
+      checkedOperation({ kind: 'dom_contract_query', platform: 'boss' }),
+      checkedOperation({ kind: 'jsonl_checkpoint', platform: 'boss' }),
+    ],
   };
 }
 

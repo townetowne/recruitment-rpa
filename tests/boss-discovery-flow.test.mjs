@@ -15,9 +15,9 @@ function createDispatcher({ summaries, summariesByPage, details, route, runtime,
     if (task.action === 'read_runtime_diagnostics') {
       return runtime || {
         ok: true,
-        contentVersion: '0.1.16',
-        protocolVersion: 'boss-rpa-v0.1.16',
-        pageBridgeVersion: '0.1.16',
+        contentVersion: '0.1.17',
+        protocolVersion: 'boss-rpa-v0.1.17',
+        pageBridgeVersion: '0.1.17',
         host: 'www.zhipin.com',
         path: '/web/geek/jobs',
       };

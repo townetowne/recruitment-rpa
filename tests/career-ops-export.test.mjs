@@ -7,6 +7,7 @@ import test from 'node:test';
 import {
   createCareerOpsScoreCommands,
   writeCareerOpsCandidates,
+  writeCareerOpsSessionCandidates,
 } from '../src/career-ops-export.mjs';
 
 test('writes RPA candidates into career-ops candidate file with stable dedupe', async () => {
@@ -61,4 +62,30 @@ test('creates the exact career-ops scoring command chain', () => {
   assert.deepEqual(commands[0].args, ['boss-score.mjs', '--input', 'data/boss-candidates.json', '--threshold', '4']);
   assert.deepEqual(commands[1].args, ['boss-match.mjs', '--input', 'data/boss-queue.json', '--limit', '50']);
   assert.deepEqual(commands[2].args, ['boss-review.mjs', '--input', 'data/boss-match-pool.json', '--limit', '50', '--threshold', '4']);
+});
+
+test('writes session candidates without merging historical candidate state', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'recruitment-rpa-career-ops-session-'));
+  try {
+    const result = await writeCareerOpsSessionCandidates({
+      careerOpsRoot: root,
+      candidatesPath: 'data/boss-collected-武汉-20260904.json',
+      candidates: [
+        {
+          source: 'boss-rpa',
+          company: 'Today A',
+          title: 'AI Agent 架构师',
+          city: '武汉',
+          url: 'https://www.zhipin.com/job_detail/today-a.html',
+        },
+      ],
+    });
+
+    const written = JSON.parse(await readFile(result.outputPath, 'utf8'));
+    assert.equal(result.total, 1);
+    assert.equal(written.length, 1);
+    assert.equal(written[0].company, 'Today A');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });

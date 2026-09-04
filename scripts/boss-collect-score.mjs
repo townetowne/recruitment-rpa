@@ -7,6 +7,7 @@ import {
   createCareerOpsScoreCommands,
   runCareerOpsScoreCommands,
   writeCareerOpsCandidates,
+  writeCareerOpsSessionCandidates,
 } from '../src/career-ops-export.mjs';
 import { createLocalRunnerServer } from '../src/local-runner-server.mjs';
 
@@ -46,7 +47,7 @@ function parseQueries(value, fallback) {
 async function main() {
   const args = parseArgs();
   if (args.help) {
-    console.log('Usage: node scripts/boss-collect-score.mjs --query "AI 架构师" --queries "AI 架构师,大模型架构师" --city 武汉 --target 50 --max-pages 10');
+    console.log('Usage: node scripts/boss-collect-score.mjs --query "AI 架构师" --queries "AI 架构师,大模型架构师" --city 武汉 --target 50 --max-pages 10 [--review-scope session|all]');
     return;
   }
 
@@ -59,6 +60,7 @@ async function main() {
   const threshold = Number(args.threshold || 4);
   const limit = Number(args.limit || 50);
   const maxPages = Number(args['max-pages'] || args.maxPages || 10);
+  const reviewScope = String(args['review-scope'] || args.reviewScope || 'session');
   const taskTimeoutMs = Number(args['task-timeout-ms'] || 60000);
   const clientTaskTimeoutMs = Math.max(1000, taskTimeoutMs - 5000);
   const runnerReadyTimeoutMs = Number(args['runner-ready-timeout-ms'] || 90000);
@@ -102,19 +104,35 @@ async function main() {
       careerOpsRoot,
       candidates: collected.careerOpsCandidates,
     });
+    const sessionCandidatesPath = String(
+      args['session-candidates-path']
+        || args.sessionCandidatesPath
+        || `data/boss-collected-${baseCity}-${todayCompact()}.json`,
+    );
+    const sessionExportResult = await writeCareerOpsSessionCandidates({
+      careerOpsRoot,
+      candidates: collected.careerOpsCandidates,
+      candidatesPath: sessionCandidatesPath,
+    });
+    const scoringCandidatesPath = reviewScope === 'all'
+      ? 'data/boss-candidates.json'
+      : sessionCandidatesPath;
 
     const commands = createCareerOpsScoreCommands({
       threshold,
       limit,
-      candidatesPath: 'data/boss-candidates.json',
+      candidatesPath: scoringCandidatesPath,
     });
     const commandResults = await runCareerOpsScoreCommands({ careerOpsRoot, commands });
 
     console.log(JSON.stringify({
       stage: 'completed',
       accepted: collected.careerOpsCandidates.length,
+      reviewScope,
       careerOpsCandidatesPath: exportResult.outputPath,
       careerOpsTotalCandidates: exportResult.total,
+      careerOpsSessionCandidatesPath: sessionExportResult.outputPath,
+      careerOpsSessionCandidates: sessionExportResult.total,
       scoreCommands: commandResults.map((result) => ({
         file: result.file,
         stdout: result.stdout.trim(),

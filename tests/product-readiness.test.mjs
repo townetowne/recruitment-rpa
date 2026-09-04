@@ -58,6 +58,33 @@ test('public package does not contain local absolute owner paths or tokens', () 
   assert.deepEqual(findings, []);
 });
 
+test('public package does not contain personal contact data', () => {
+  const ignoredDirs = new Set(['.git', 'node_modules']);
+  const forbiddenPatterns = [
+    /\b1[3-9]\d{9}\b/,
+    /[A-Z0-9._%+-]+@(?!example\.com\b)[A-Z0-9.-]+\.[A-Z]{2,}/i,
+  ];
+  const findings = [];
+  const scan = (dir) => {
+    for (const entry of readdirSync(dir)) {
+      if (ignoredDirs.has(entry)) continue;
+      const path = join(dir, entry);
+      const stat = statSync(path);
+      if (stat.isDirectory()) {
+        scan(path);
+        continue;
+      }
+      if (stat.size > 500_000) continue;
+      const text = readFileSync(path, 'utf8');
+      if (forbiddenPatterns.some((pattern) => pattern.test(text))) {
+        findings.push(path.replace(projectRoot, '').replace(/^\//, ''));
+      }
+    }
+  };
+  scan(projectRoot);
+  assert.deepEqual(findings, []);
+});
+
 test('public package includes beginner quickstart and excludes macOS metadata', () => {
   assert.equal(existsSync(join(projectRoot, 'QUICKSTART.zh-CN.md')), true);
   assert.equal(existsSync(join(projectRoot, 'LICENSE')), true);

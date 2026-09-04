@@ -1,6 +1,6 @@
 {
   "name": "@genesis-nexus/recruitment-rpa",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "private": false,
   "type": "module",
   "description": "Boss-first recruitment RPA execution layer with reusable site adapters and no visual automation path.",
@@ -12,6 +12,8 @@
   "scripts": {
     "setup:career-ops": "node scripts/setup-career-ops.mjs",
     "boss:collect-score": "node scripts/boss-collect-score.mjs",
+    "boss:score-checkpoint": "node scripts/boss-score-checkpoint.mjs",
+    "boss:chat-report": "node scripts/boss-chat-report.mjs",
     "test": "node --test tests/*.test.mjs"
   }
 }

@@ -3,6 +3,8 @@ import test from 'node:test';
 
 import {
   BOSS_ADAPTER,
+  createBossChatRouteTask,
+  createBossChatThreadsTask,
   createBossDiscoveryPlan,
   createBossJobDetailTask,
   createBossJobListTask,
@@ -16,6 +18,15 @@ test('Boss adapter is primary and probes only the current page route contract', 
   assert.equal(BOSS_ADAPTER.platform, 'boss');
   assert.equal(BOSS_ADAPTER.priority, 'primary');
   assert.ok(BOSS_ADAPTER.contracts.jobDetail.fields.includes('contactState'));
+  assert.ok(BOSS_ADAPTER.capabilities.includes('chatReconciliation'));
+  assert.deepEqual(BOSS_ADAPTER.contracts.chatReconciliation.fields, [
+    'company',
+    'title',
+    'lastMessage',
+    'lastSpeaker',
+    'lastMessageAt',
+    'deliveryStatus',
+  ]);
 
   assert.deepEqual(createBossRouteProbeTask(), {
     platform: 'boss',
@@ -23,6 +34,28 @@ test('Boss adapter is primary and probes only the current page route contract', 
     allowNavigation: false,
     operation: { kind: 'dom_contract_query', platform: 'boss' },
   });
+});
+
+test('Boss adapter creates read-only chat route and chat thread tasks', () => {
+  const routeTask = createBossChatRouteTask();
+  const threadTask = createBossChatThreadsTask({ limit: 80 });
+
+  assert.equal(routeTask.platform, 'boss');
+  assert.equal(routeTask.action, 'ensure_chat_route');
+  assert.equal(routeTask.readOnly, true);
+  assert.equal(routeTask.route.host, 'www.zhipin.com');
+  assert.equal(routeTask.route.path, '/web/geek/chat');
+  assert.equal(routeTask.route.url, 'https://www.zhipin.com/web/geek/chat');
+  assert.deepEqual(routeTask.operation, { kind: 'dom_contract_query', platform: 'boss' });
+
+  assert.equal(threadTask.platform, 'boss');
+  assert.equal(threadTask.action, 'read_chat_threads');
+  assert.equal(threadTask.readOnly, true);
+  assert.equal(threadTask.limit, 80);
+  assert.deepEqual(threadTask.operations.map((operation) => operation.kind), [
+    'dom_contract_query',
+    'jsonl_checkpoint',
+  ]);
 });
 
 test('Boss adapter requires a runtime diagnostics task before live collection', () => {
@@ -41,8 +74,8 @@ test('Boss adapter requires a runtime diagnostics task before live collection', 
   assert.equal(task.route.path, '/web/geek/jobs');
   assert.equal(task.route.query, 'AI 架构师');
   assert.equal(task.route.cityCode, '101200100');
-  assert.equal(task.expectedContentVersion, '0.1.16');
-  assert.equal(task.expectedProtocolVersion, 'boss-rpa-v0.1.16');
+  assert.equal(task.expectedContentVersion, '0.1.17');
+  assert.equal(task.expectedProtocolVersion, 'boss-rpa-v0.1.17');
   assert.deepEqual(task.operation, { kind: 'dom_contract_query', platform: 'boss' });
 });
 

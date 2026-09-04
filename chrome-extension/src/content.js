@@ -1,12 +1,12 @@
-const GENESIS_RECRUITMENT_RPA_CONTENT_VERSION = '0.1.16';
-const GENESIS_RECRUITMENT_RPA_PROTOCOL_VERSION = 'boss-rpa-v0.1.16';
-const GENESIS_RECRUITMENT_RPA_EXECUTE_MESSAGE = 'RECRUITMENT_RPA_EXECUTE_V0_1_16';
-const PAGE_FETCH_MESSAGE = 'RECRUITMENT_RPA_PAGE_FETCH_V0_1_16';
-const PAGE_FETCH_RESULT_MESSAGE = 'RECRUITMENT_RPA_PAGE_FETCH_RESULT_V0_1_16';
-const PAGE_EXTRACT_BOSS_JOBS_MESSAGE = 'RECRUITMENT_RPA_PAGE_EXTRACT_BOSS_JOBS_V0_1_16';
-const PAGE_EXTRACT_BOSS_JOBS_RESULT_MESSAGE = 'RECRUITMENT_RPA_PAGE_EXTRACT_BOSS_JOBS_RESULT_V0_1_16';
-const PAGE_DIAGNOSTICS_MESSAGE = 'RECRUITMENT_RPA_PAGE_DIAGNOSTICS_V0_1_16';
-const PAGE_DIAGNOSTICS_RESULT_MESSAGE = 'RECRUITMENT_RPA_PAGE_DIAGNOSTICS_RESULT_V0_1_16';
+const GENESIS_RECRUITMENT_RPA_CONTENT_VERSION = '0.1.17';
+const GENESIS_RECRUITMENT_RPA_PROTOCOL_VERSION = 'boss-rpa-v0.1.17';
+const GENESIS_RECRUITMENT_RPA_EXECUTE_MESSAGE = 'RECRUITMENT_RPA_EXECUTE_V0_1_17';
+const PAGE_FETCH_MESSAGE = 'RECRUITMENT_RPA_PAGE_FETCH_V0_1_17';
+const PAGE_FETCH_RESULT_MESSAGE = 'RECRUITMENT_RPA_PAGE_FETCH_RESULT_V0_1_17';
+const PAGE_EXTRACT_BOSS_JOBS_MESSAGE = 'RECRUITMENT_RPA_PAGE_EXTRACT_BOSS_JOBS_V0_1_17';
+const PAGE_EXTRACT_BOSS_JOBS_RESULT_MESSAGE = 'RECRUITMENT_RPA_PAGE_EXTRACT_BOSS_JOBS_RESULT_V0_1_17';
+const PAGE_DIAGNOSTICS_MESSAGE = 'RECRUITMENT_RPA_PAGE_DIAGNOSTICS_V0_1_17';
+const PAGE_DIAGNOSTICS_RESULT_MESSAGE = 'RECRUITMENT_RPA_PAGE_DIAGNOSTICS_RESULT_V0_1_17';
 
 if (globalThis.__genesisRecruitmentRpaContentVersion !== GENESIS_RECRUITMENT_RPA_CONTENT_VERSION) {
   globalThis.__genesisRecruitmentRpaContentReady = true;
@@ -121,6 +121,7 @@ if (globalThis.__genesisRecruitmentRpaContentVersion !== GENESIS_RECRUITMENT_RPA
       host: window.location.hostname,
       path: window.location.pathname,
       hasJobCards: document.querySelectorAll('[class*="job-card"], [class*="job-list"]').length > 0,
+      hasChatThreads: document.querySelectorAll('[class*="chat"], [class*="friend"], [class*="conversation"]').length > 0,
     };
   }
 
@@ -129,6 +130,7 @@ if (globalThis.__genesisRecruitmentRpaContentVersion !== GENESIS_RECRUITMENT_RPA
       host: window.location.hostname,
       path: window.location.pathname,
       hasJobCards: document.querySelectorAll('[class*="job-card"], [class*="job-list"]').length > 0,
+      hasChatThreads: document.querySelectorAll('[class*="chat"], [class*="friend"], [class*="conversation"]').length > 0,
       hasChatEditor: document.querySelectorAll('textarea, [contenteditable="true"]').length > 0,
     };
   }
@@ -183,9 +185,37 @@ if (globalThis.__genesisRecruitmentRpaContentVersion !== GENESIS_RECRUITMENT_RPA
     });
   }
 
+  function waitForBossChatThreads({ timeoutMs = 10000 } = {}) {
+    if (document.querySelector('[class*="chat"], [class*="friend"], [class*="conversation"]')) {
+      return Promise.resolve(true);
+    }
+
+    return new Promise((resolve) => {
+      const timeoutId = setTimeout(() => {
+        observer.disconnect();
+        resolve(false);
+      }, timeoutMs);
+
+      const observer = new MutationObserver(() => {
+        if (!document.querySelector('[class*="chat"], [class*="friend"], [class*="conversation"]')) return;
+        clearTimeout(timeoutId);
+        observer.disconnect();
+        resolve(true);
+      });
+
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+      });
+    });
+  }
+
   async function readBossRouteContractAfterRender() {
     if (window.location.pathname === '/web/geek/jobs') {
       await waitForBossJobCards();
+    }
+    if (window.location.pathname === '/web/geek/chat') {
+      await waitForBossChatThreads();
     }
     return readBossRouteContract();
   }
@@ -200,6 +230,61 @@ if (globalThis.__genesisRecruitmentRpaContentVersion !== GENESIS_RECRUITMENT_RPA
 
   function cleanText(value) {
     return String(value || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function valueAtPath(source, path) {
+    return path.reduce((current, segment) => {
+      if (!current || typeof current !== 'object') return undefined;
+      return current[segment];
+    }, source);
+  }
+
+  function firstValue(sources, paths) {
+    for (const source of sources) {
+      if (!source || typeof source !== 'object') continue;
+      for (const path of paths) {
+        const value = valueAtPath(source, path);
+        if (value !== undefined && value !== null && String(value).trim() !== '') return value;
+      }
+    }
+    return '';
+  }
+
+  function vueRecordCandidates(vue) {
+    if (!vue || typeof vue !== 'object') return [];
+    return [
+      vue.data,
+      vue.item,
+      vue.friend,
+      vue.chat,
+      vue.conversation,
+      vue.job,
+      vue.jobInfo,
+      vue.bossInfo,
+      vue.$props?.data,
+      vue.$props?.item,
+      vue.$props?.friend,
+      vue.$props?.chat,
+      vue.$props?.conversation,
+      vue.$data?.data,
+      vue.$data?.item,
+      vue.$data?.friend,
+      vue.$data?.chat,
+      vue.$data?.conversation,
+    ].filter(Boolean);
+  }
+
+  function collectPageRecords(root) {
+    const records = [];
+    let node = root;
+
+    while (node) {
+      records.push(...vueRecordCandidates(node.__vue__));
+      records.push(...vueRecordCandidates(node.__vueParentComponent));
+      node = node.parentElement;
+    }
+
+    return records;
   }
 
   function inferBossContactState(value) {
@@ -333,6 +418,170 @@ if (globalThis.__genesisRecruitmentRpaContentVersion !== GENESIS_RECRUITMENT_RPA
     const pageJobs = Array.isArray(pageResult?.jobs) ? pageResult.jobs : [];
     if (pageJobs.length > 0) return { jobs: pageJobs.slice(0, task.limit || 50) };
     return readBossJobCardsFromDom(task);
+  }
+
+  function inferChatSpeakerFromText(value) {
+    const text = cleanText(value);
+    if (/我[:：]|我已|已发送|送达|已读|候选人|求职者/.test(text)) return 'me';
+    if (/对方|招聘者|招聘方|HR|hr|Boss|boss|回复|发来|问/.test(text)) return 'recruiter';
+    return 'unknown';
+  }
+
+  function readBossChatThreadRoots() {
+    const roots = [];
+    const seen = new Set();
+    const containers = [
+      ...document.querySelectorAll(
+        '[class*="chat-list"], [class*="friend-list"], [class*="user-list"], [class*="conversation-list"], [class*="relation-list"]',
+      ),
+    ];
+    const sourceContainers = containers.length > 0 ? containers : [document.body];
+
+    for (const container of sourceContainers) {
+      const candidates = [
+        ...container.querySelectorAll(
+          '[class*="chat-user"], [class*="chat-item"], [class*="friend-item"], [class*="conversation-item"], [class*="user-item"], li',
+        ),
+      ];
+      for (const candidate of candidates) {
+        const text = cleanText(candidate.textContent);
+        if (text.length < 4 || text.length > 700) continue;
+        if (candidate.querySelector('textarea, [contenteditable="true"]')) continue;
+        if (seen.has(candidate)) continue;
+        seen.add(candidate);
+        roots.push(candidate);
+      }
+    }
+
+    return roots;
+  }
+
+  function textFromSelectors(root, selectors) {
+    for (const selector of selectors) {
+      const value = cleanText(root.querySelector(selector)?.textContent || '');
+      if (value) return value;
+    }
+    return '';
+  }
+
+  function extractChatTime(text) {
+    return cleanText(
+      text.match(/\d{4}[-/]\d{1,2}[-/]\d{1,2}\s+\d{1,2}:\d{2}(?::\d{2})?/)?.[0] ||
+        text.match(/(?:今天|昨天)?\s*\d{1,2}:\d{2}/)?.[0] ||
+        text.match(/\d+\s*(?:分钟前|小时前)/)?.[0] ||
+        text.match(/刚刚|刚才/)?.[0] ||
+        '',
+    );
+  }
+
+  function normalizeBossChatThread(root, index) {
+    const records = collectPageRecords(root);
+    const text = cleanText(root.textContent);
+    const link = root.querySelector('a[href*="/web/geek/chat"], a[href*="/chat"]');
+    const href = link ? new URL(link.getAttribute('href'), window.location.href).toString() : '';
+    const company = cleanText(firstValue(records, [
+      ['brandName'],
+      ['companyName'],
+      ['recruiterCompany'],
+      ['bossInfo', 'brandName'],
+      ['jobInfo', 'brandName'],
+    ])) || textFromSelectors(root, [
+      '[class*="company"]',
+      '[class*="brand"]',
+      '[class*="corp"]',
+    ]);
+    const title = cleanText(firstValue(records, [
+      ['jobName'],
+      ['jobTitle'],
+      ['positionName'],
+      ['jobInfo', 'jobName'],
+      ['jobInfo', 'positionName'],
+    ])) || textFromSelectors(root, [
+      '[class*="job"]',
+      '[class*="position"]',
+      '[class*="title"]',
+    ]);
+    const lastMessage = cleanText(firstValue(records, [
+      ['lastMessage'],
+      ['lastMsg'],
+      ['lastMsgContent'],
+      ['message'],
+      ['content'],
+      ['summary'],
+    ])) || textFromSelectors(root, [
+      '[class*="last"]',
+      '[class*="msg"]',
+      '[class*="message"]',
+      '[class*="desc"]',
+    ]) || text;
+    const lastMessageAt = cleanText(firstValue(records, [
+      ['lastMessageAt'],
+      ['lastMsgTime'],
+      ['lastTime'],
+      ['time'],
+      ['updateTime'],
+      ['updatedAt'],
+    ])) || extractChatTime(text);
+    const deliveryStatus = cleanText(firstValue(records, [
+      ['deliveryStatus'],
+      ['readStatus'],
+      ['status'],
+      ['statusText'],
+    ])) || cleanText(text.match(/已读|送达|未读|新消息|对方已回复|已回复/)?.[0] || '');
+    const lastSpeaker = cleanText(firstValue(records, [
+      ['lastSpeaker'],
+      ['sender'],
+      ['senderType'],
+      ['from'],
+    ])) || inferChatSpeakerFromText(`${deliveryStatus} ${lastMessage}`);
+
+    return {
+      conversationKey: href || cleanText(firstValue(records, [
+        ['friendId'],
+        ['encryptBossId'],
+        ['encryptGeekId'],
+        ['conversationId'],
+        ['id'],
+      ])) || `boss-chat-visible-${index + 1}`,
+      url: href,
+      company,
+      title,
+      lastMessage: lastMessage.slice(0, 240),
+      lastSpeaker,
+      lastMessageAt,
+      deliveryStatus,
+      unread: /未读|新消息/.test(`${deliveryStatus} ${text}`),
+      threadText: text.slice(0, 500),
+    };
+  }
+
+  async function readBossChatThreads(task = {}) {
+    if (window.location.hostname !== 'www.zhipin.com' || window.location.pathname !== '/web/geek/chat') {
+      throw new Error('boss_chat_route_required');
+    }
+    await waitForBossChatThreads();
+    const limit = Number(task.limit || 80);
+    const roots = readBossChatThreadRoots();
+    const seen = new Set();
+    const threads = [];
+
+    for (const [index, root] of roots.entries()) {
+      const thread = normalizeBossChatThread(root, index);
+      const identity = [thread.conversationKey, thread.company, thread.title, thread.lastMessage].join('|');
+      if (seen.has(identity)) continue;
+      seen.add(identity);
+      threads.push(thread);
+      if (threads.length >= limit) break;
+    }
+
+    return {
+      coverage: {
+        scope: 'loaded_chat_list',
+        loadedCount: threads.length,
+        partial: false,
+      },
+      threads,
+    };
   }
 
   function readBossJobDetailFromRoot(sourceRoot, task, url) {
@@ -591,6 +840,9 @@ if (globalThis.__genesisRecruitmentRpaContentVersion !== GENESIS_RECRUITMENT_RPA
     }
     if (task.platform === 'boss' && task.action === 'read_job_detail') {
       return readBossJobDetail(task);
+    }
+    if (task.platform === 'boss' && task.action === 'read_chat_threads') {
+      return readBossChatThreads(task);
     }
     if (task.action === 'page_context_fetch') {
       return requestPageFetch(task.request);

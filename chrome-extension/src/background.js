@@ -15,9 +15,11 @@ import {
 const ALLOWED_ACTIONS = new Set([
   'read_runtime_diagnostics',
   'ensure_search_route',
+  'ensure_chat_route',
   'read_route_contract',
   'read_job_cards',
   'read_job_detail',
+  'read_chat_threads',
   'page_context_fetch',
 ]);
 
@@ -25,8 +27,8 @@ const DEFAULT_RUNNER_URL = 'http://127.0.0.1:17333';
 const LOCAL_RUNNER_HOSTS = new Set(['127.0.0.1', 'localhost']);
 const AUTOCONNECT_ALARM_NAME = 'genesis-rpa-autoconnect';
 const AUTOCONNECT_PERIOD_MINUTES = 0.5;
-const EXPECTED_CONTENT_VERSION = '0.1.16';
-const EXECUTE_MESSAGE_TYPE = 'RECRUITMENT_RPA_EXECUTE_V0_1_16';
+const EXPECTED_CONTENT_VERSION = '0.1.17';
+const EXECUTE_MESSAGE_TYPE = 'RECRUITMENT_RPA_EXECUTE_V0_1_17';
 
 const runnerState = {
   connected: false,
@@ -71,6 +73,18 @@ function assertBossSearchRoute(route) {
   return url;
 }
 
+function assertBossChatRoute(route) {
+  const url = new URL(route?.url || '');
+  if (
+    url.hostname !== 'www.zhipin.com' ||
+    url.pathname !== '/web/geek/chat' ||
+    url.search !== ''
+  ) {
+    throw new Error('unsupported_boss_chat_route');
+  }
+  return url;
+}
+
 function isBossSearchRouteMatch(urlValue, route) {
   try {
     const url = new URL(urlValue || '');
@@ -81,6 +95,15 @@ function isBossSearchRouteMatch(urlValue, route) {
       url.searchParams.get('city') === route.cityCode &&
       (url.searchParams.get('page') || '1') === String(route.page || 1)
     );
+  } catch {
+    return false;
+  }
+}
+
+function isBossChatRouteMatch(urlValue) {
+  try {
+    const url = new URL(urlValue || '');
+    return url.hostname === 'www.zhipin.com' && url.pathname === '/web/geek/chat';
   } catch {
     return false;
   }
@@ -147,6 +170,40 @@ function waitForTabDetailRoute(tabId, route, timeoutMs = 20000) {
 
     const timeoutId = setTimeout(() => {
       settle(reject, new Error('boss_detail_route_timeout'));
+    }, timeoutMs);
+
+    chrome.tabs.onUpdated.addListener(onUpdated);
+    chrome.tabs.get(tabId).then(inspect).catch((error) => settle(reject, error));
+  });
+}
+
+function waitForTabChatRoute(tabId, timeoutMs = 20000) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+
+    function cleanup() {
+      clearTimeout(timeoutId);
+      chrome.tabs.onUpdated.removeListener(onUpdated);
+    }
+
+    function settle(fn, value) {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      fn(value);
+    }
+
+    function inspect(tab) {
+      if (isBossChatRouteMatch(tab?.url)) settle(resolve, tab);
+    }
+
+    function onUpdated(updatedTabId, _changeInfo, tab) {
+      if (updatedTabId !== tabId) return;
+      inspect(tab);
+    }
+
+    const timeoutId = setTimeout(() => {
+      settle(reject, new Error('boss_chat_route_timeout'));
     }, timeoutMs);
 
     chrome.tabs.onUpdated.addListener(onUpdated);
@@ -238,6 +295,35 @@ async function ensureBossSearchRoute(task, targetTabId) {
   };
 }
 
+async function ensureBossChatRoute(task, targetTabId) {
+  const routeUrl = assertBossChatRoute(task.route);
+  const tab = await resolveDispatchTab(targetTabId);
+
+  if (isBossChatRouteMatch(tab.url)) {
+    return {
+      ok: true,
+      navigated: false,
+      host: routeUrl.hostname,
+      path: routeUrl.pathname,
+      url: routeUrl.toString(),
+    };
+  }
+
+  await chrome.tabs.update(tab.id, {
+    url: routeUrl.toString(),
+    active: true,
+  });
+  const loadedTab = await waitForTabChatRoute(tab.id, task.timeoutMs || 20000);
+
+  return {
+    ok: true,
+    navigated: true,
+    host: routeUrl.hostname,
+    path: routeUrl.pathname,
+    url: loadedTab.url || routeUrl.toString(),
+  };
+}
+
 async function ensureBossDetailRoute(task, targetTabId) {
   const tab = await resolveDispatchTab(targetTabId);
 
@@ -313,6 +399,9 @@ async function dispatchTask(task, targetTabId) {
   }
   if (task.action === 'ensure_search_route') {
     return ensureBossSearchRoute(task, selectedTargetTabId);
+  }
+  if (task.action === 'ensure_chat_route') {
+    return ensureBossChatRoute(task, selectedTargetTabId);
   }
   if (task.action === 'read_job_detail') {
     return ensureBossDetailRoute(task, selectedTargetTabId);
